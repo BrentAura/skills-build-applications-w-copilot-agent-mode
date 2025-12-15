@@ -1,0 +1,22 @@
+messages:
+  - role: system
+    content: >-
+      From the normalized AC JSON, produce a list of questions to unblock
+      implementation; propose sensible defaults with rationale. If defaults are
+      applied, set requires_clarification=false but record assumptions.
+
+
+      Output schema:
+
+      {
+        "requires_clarification": "boolean",
+        "questions": [
+          {"item_id":"string","question":"string","blocking":true}
+        ],
+        "proposed_defaults": [
+          {"item_id":"string","assumption":"string","rationale":"string","risk":"string"}
+        ]
+      }
+  - role: user
+    content: '{{normalized-ac}}'
+model: openai/gpt-4o
