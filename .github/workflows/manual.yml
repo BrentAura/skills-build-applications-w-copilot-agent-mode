@@ -1,0 +1,113 @@
+name: Chain Two Prompts (GitHub Models)
+
+on:
+  workflow_dispatch:
+    inputs:
+      ac_text:
+        description: "Raw AC text"
+        required: true
+        type: string
+  push:
+    paths:
+      - prompts/**
+      - .github/workflows/chain-prompts.yml
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    env:
+      GH_MODELS_ENDPOINT: https://models.inference.ai.azure.com  # GitHub Models endpoint
+      MODEL_A: gpt-4o-mini  # replace with your chosen model for step A
+      MODEL_B: gpt-4o-mini  # replace as needed
+      TEMPERATURE: "0.1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare inputs
+        id: prep
+        run: |
+          mkdir -p out
+          # Compose the AC text: from dispatch input or from a file
+          if [ -n "${{ github.event.inputs.ac_text }}" ]; then
+            printf "%s" "${{ github.event.inputs.ac_text }}" > out/ac.txt
+          else
+            # Fallback: read from a repo file
+            cat prompts/example_ac.txt > out/ac.txt || true
+          fi
+
+      - name: Load prompt templates
+        id: load_prompts
+        run: |
+          # These files should contain your system/instruction templates
+          # Example: prompts/normalizer.md and prompts/ambiguity.md
+          cat prompts/normalizer.md > out/promptA.md
+          cat prompts/ambiguity.md > out/promptB.md
+
+      - name: Call Model A - Normalizer
+        id: model_a
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          jq -n --arg sys "$(cat out/promptA.md)" \
+                --arg user "$(cat out/ac.txt)" \
+                --arg model "$MODEL_A" \
+                --arg temp "$TEMPERATURE" '
+            {
+              "model": $model,
+              "temperature": ($temp|tonumber),
+              "messages": [
+                {"role":"system","content": $sys},
+                {"role":"user","content": $user}
+              ],
+              "response_format": {"type":"json_object"}
+            }' > out/bodyA.json
+
+          curl -sS -X POST "$GH_MODELS_ENDPOINT/ai/dev/v1/chat/completions" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d @out/bodyA.json \
+            -o out/respA.json
+
+          # Extract JSON content
+          jq -r '.choices[0].message.content' out/respA.json > out/normalized.json
+
+          # Validate JSON to ensure downstream safety
+          cat out/normalized.json | jq . > /dev/null
+
+          echo "normalized=$(cat out/normalized.json | jq -c .)" >> $GITHUB_OUTPUT
+
+      - name: Call Model B - Ambiguity Detector
+        id: model_b
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          jq -n --arg sys "$(cat out/promptB.md)" \
+                --argjson normalized "$(cat out/normalized.json)" \
+                --arg model "$MODEL_B" \
+                --arg temp "$TEMPERATURE" '
+            {
+              "model": $model,
+              "temperature": ($temp|tonumber),
+              "messages": [
+                {"role":"system","content": $sys},
+                {"role":"user","content": ("Normalized AC JSON:\n" + ($normalized|tojson))}
+              ],
+              "response_format": {"type":"json_object"}
+            }' > out/bodyB.json
+
+          curl -sS -X POST "$GH_MODELS_ENDPOINT/ai/dev/v1/chat/completions" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d @out/bodyB.json \
+            -o out/respB.json
+
+          jq -r '.choices[0].message.content' out/respB.json > out/ambiguities.json
+          cat out/ambiguities.json | jq . > /dev/null
+          echo "ambiguities=$(cat out/ambiguities.json | jq -c .)" >> $GITHUB_OUTPUT
+
+      - name: Save artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: chain-outputs
+          path: out/
