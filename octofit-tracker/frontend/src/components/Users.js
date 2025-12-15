@@ -18,25 +18,33 @@ const Users = () => {
 
   return (
     <div className="container mt-4">
-      <h2 className="mb-4 display-6">Users</h2>
+      <h2 className="mb-4 display-6">👤 Users</h2>
       <div className="card">
         <div className="card-body">
-          <table className="table table-striped table-hover">
-            <thead className="table-dark">
-              <tr>
-                <th>Username</th>
-                <th>Email</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user, idx) => (
-                <tr key={idx}>
-                  <td>{user.username}</td>
-                  <td>{user.email}</td>
+          {users.length > 0 ? (
+            <table className="table table-striped table-hover">
+              <thead className="table-dark">
+                <tr>
+                  <th>Username</th>
+                  <th>Email</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {users.map((user, idx) => (
+                  <tr key={idx}>
+                    <td><strong>{user.username}</strong></td>
+                    <td>{user.email}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className="empty-state">
+              <div className="empty-state-icon">👤</div>
+              <h4>No Users Yet</h4>
+              <p>Users will appear here once they register!</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

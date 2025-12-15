@@ -18,27 +18,35 @@ const Workouts = () => {
 
   return (
     <div className="container mt-4">
-      <h2 className="mb-4 display-6">Workouts</h2>
+      <h2 className="mb-4 display-6">🏋️ Workouts</h2>
       <div className="card">
         <div className="card-body">
-          <table className="table table-striped table-hover">
-            <thead className="table-dark">
-              <tr>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Suggested For</th>
-              </tr>
-            </thead>
-            <tbody>
-              {workouts.map((workout, idx) => (
-                <tr key={idx}>
-                  <td>{workout.name}</td>
-                  <td>{workout.description}</td>
-                  <td>{workout.suggested_for}</td>
+          {workouts.length > 0 ? (
+            <table className="table table-striped table-hover">
+              <thead className="table-dark">
+                <tr>
+                  <th>Name</th>
+                  <th>Description</th>
+                  <th>Suggested For</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {workouts.map((workout, idx) => (
+                  <tr key={idx}>
+                    <td><strong>{workout.name}</strong></td>
+                    <td>{workout.description}</td>
+                    <td>{workout.suggested_for}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className="empty-state">
+              <div className="empty-state-icon">🏋️</div>
+              <h4>No Workouts Yet</h4>
+              <p>Workout suggestions will appear here!</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
