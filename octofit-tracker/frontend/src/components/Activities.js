@@ -27,7 +27,7 @@ const Activities = () => {
                 <tr>
                   <th>User</th>
                   <th>Activity Type</th>
-                  <th>Duration</th>
+                  <th>Duration (min)</th>
                   <th>Team</th>
                 </tr>
               </thead>
