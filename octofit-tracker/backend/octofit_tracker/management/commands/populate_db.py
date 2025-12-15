@@ -1,34 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
-from djongo import models
-
-# Define models for teams, activities, leaderboard, and workouts
-class Team(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    class Meta:
-        app_label = 'octofit_tracker'
-
-class Activity(models.Model):
-    user = models.CharField(max_length=100)
-    activity_type = models.CharField(max_length=100)
-    duration = models.IntegerField()
-    team = models.CharField(max_length=100)
-    class Meta:
-        app_label = 'octofit_tracker'
-
-class Leaderboard(models.Model):
-    team = models.CharField(max_length=100)
-    points = models.IntegerField()
-    class Meta:
-        app_label = 'octofit_tracker'
-
-class Workout(models.Model):
-    name = models.CharField(max_length=100)
-    description = models.TextField()
-    suggested_for = models.CharField(max_length=100)
-    class Meta:
-        app_label = 'octofit_tracker'
-
+from octofit_tracker.models import Team, Activity, Leaderboard, Workout
 User = get_user_model()
 
 class Command(BaseCommand):
