@@ -6,10 +6,10 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
-// Set REACT_APP_CODESPACE_NAME from window location if not set
-if (!process.env.REACT_APP_CODESPACE_NAME && window.location.hostname.includes('-8000.app.github.dev')) {
+// Set REACT_APP_CODESPACE_NAME as a global variable from window location if not set at build time
+if (!window.REACT_APP_CODESPACE_NAME && window.location.hostname.includes('-8000.app.github.dev')) {
   const codespace = window.location.hostname.split('-8000.app.github.dev')[0];
-  process.env.REACT_APP_CODESPACE_NAME = codespace;
+  window.REACT_APP_CODESPACE_NAME = codespace;
 }
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
